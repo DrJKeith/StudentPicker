@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Picker</title>
+    <link rel="manifest" href="#" id="manifest-placeholder">
+    <meta name="theme-color" content="#007AFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Student Picker">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f2f2f7;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .class-selector {
+            margin-bottom: 30px;
+        }
+
+        .segmented-control {
+            display: flex;
+            background: #e5e5ea;
+            border-radius: 8px;
+            padding: 2px;
+        }
+
+        .segment {
+            flex: 1;
+            padding: 8px 16px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .segment.active {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-weight: 500;
+        }
+
+        .student-display {
+            text-align: center;
+            margin-bottom: 30px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .selected-student {
+            font-size: 32px;
+            font-weight: bold;
+            color: #007AFF;
+            word-wrap: break-word;
+        }
+
+        .ready-message {
+            font-size: 24px;
+            color: #8E8E93;
+        }
+
+        .spacer {
+            flex-grow: 1;
+        }
+
+        .student-count {
+            text-align: center;
+            font-size: 14px;
+            color: #8E8E93;
+            margin-bottom: 20px;
+        }
+
+        .pick-button {
+            padding: 16px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pick-button:disabled {
+            background: #8E8E93;
+            cursor: not-allowed;
+        }
+
+        .pick-button:not(:disabled):active {
+            transform: scale(0.98);
+        }
+
+        .file-upload {
+            margin-top: 20px;
+            padding: 20px;
+            border: 2px dashed #007AFF;
+            border-radius: 10px;
+            text-align: center;
+            background: #f8f9ff;
+        }
+
+        .file-upload.hidden {
+            display: none;
+        }
+
+        .upload-button {
+            padding: 10px 20px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .setup-instructions {
+            font-size: 14px;
+            color: #8E8E93;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Student Picker</h1>
+        </div>
+
+        <div class="class-selector">
+            <div class="segmented-control">
+                <button class="segment active" data-class="355">355</button>
+                <button class="segment" data-class="334">334</button>
+            </div>
+        </div>
+
+        <div class="student-display">
+            <div id="studentName" class="ready-message">Ready to pick a student!</div>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="student-count" id="studentCount">0 students loaded.</div>
+
+        <button class="pick-button" id="pickButton" disabled>Pick a Random Student</button>
+
+        <div class="file-upload" id="fileUpload">
+            <div class="setup-instructions">
+                First time setup: Upload your CSV files for each class<br>
+                Format: lastname,firstname (one per line)
+            </div>
+            <label for="file355" class="upload-button">Upload 355 Class CSV</label>
+            <input type="file" id="file355" class="file-input" accept=".csv">
+            
+            <label for="file334" class="upload-button">Upload 334 Class CSV</label>
+            <input type="file" id="file334" class="file-input" accept=".csv">
+        </div>
+    </div>
+
+    <script>
+        class StudentPicker {
+            constructor() {
+                this.students = [];
+                this.selectedStudent = null;
+                this.selectedClass = '355';
+                this.classData = {};
+                
+                this.initializeEventListeners();
+                this.loadFromStorage();
+                this.updateUI();
+            }
+
+            initializeEventListeners() {
+                // Class selector
+                document.querySelectorAll('.segment').forEach(segment => {
+                    segment.addEventListener('click', (e) => {
+                        this.selectClass(e.target.dataset.class);
+                    });
+                });
+
+                // Pick button
+                document.getElementById('pickButton').addEventListener('click', () => {
+                    this.pickRandomStudent();
+                });
+
+                // File uploads
+                document.getElementById('file355').addEventListener('change', (e) => {
+                    this.handleFileUpload(e, '355');
+                });
+                
+                document.getElementById('file334').addEventListener('change', (e) => {
+                    this.handleFileUpload(e, '334');
+                });
+            }
+
+            selectClass(className) {
+                // Update visual state
+                document.querySelectorAll('.segment').forEach(seg => {
+                    seg.classList.remove('active');
+                });
+                document.querySelector(`[data-class="${className}"]`).classList.add('active');
+                
+                this.selectedClass = className;
+                this.selectedStudent = null;
+                this.students = this.classData[className] || [];
+                this.updateUI();
+            }
+
+            pickRandomStudent() {
+                if (this.students.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * this.students.length);
+                    this.selectedStudent = this.students[randomIndex];
+                    this.updateUI();
+                }
+            }
+
+            async handleFileUpload(event, className) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                try {
+                    const text = await file.text();
+                    const students = this.parseCSV(text);
+                    this.classData[className] = students;
+                    
+                    // Save to localStorage
+                    localStorage.setItem('studentPicker_classData', JSON.stringify(this.classData));
+                    
+                    // If this is the currently selected class, update the display
+                    if (className === this.selectedClass) {
+                        this.students = students;
+                        this.selectedStudent = null;
+                        this.updateUI();
+                    }
+                    
+                    // Hide upload area if both classes are loaded
+                    if (this.classData['355'] && this.classData['334']) {
+                        document.getElementById('fileUpload').classList.add('hidden');
+                    }
+                    
+                } catch (error) {
+                    alert('Error reading file: ' + error.message);
+                }
+            }
+
+            parseCSV(text) {
+                const lines = text.split('\n');
+                const students = [];
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line) continue;
+                    
+                    const columns = line.split(',');
+                    if (columns.length >= 2) {
+                        const lastName = columns[0].trim();
+                        const firstName = columns[1].trim();
+                        const fullName = `${firstName} ${lastName}`;
+                        students.push({
+                            id: Math.random().toString(36).substr(2, 9),
+                            fullName: fullName
+                        });
+                    }
+                }
+                
+                return students;
+            }
+
+            loadFromStorage() {
+                const stored = localStorage.getItem('studentPicker_classData');
+                if (stored) {
+                    this.classData = JSON.parse(stored);
+                    this.students = this.classData[this.selectedClass] || [];
+                    
+                    // Hide upload if data exists
+                    if (this.classData['355'] && this.classData['334']) {
+                        document.getElementById('fileUpload').classList.add('hidden');
+                    }
+                }
+            }
+
+            updateUI() {
+                // Update student display
+                const studentNameEl = document.getElementById('studentName');
+                if (this.selectedStudent) {
+                    studentNameEl.textContent = this.selectedStudent.fullName;
+                    studentNameEl.className = 'selected-student';
+                } else {
+                    studentNameEl.textContent = 'Ready to pick a student!';
+                    studentNameEl.className = 'ready-message';
+                }
+
+                // Update student count
+                document.getElementById('studentCount').textContent = 
+                    `${this.students.length} students loaded.`;
+
+                // Update button state
+                const button = document.getElementById('pickButton');
+                button.disabled = this.students.length === 0;
+            }
+        }
+
+        // Initialize the app
+        new StudentPicker();
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed'));
+            });
+        }
+
+        // Create manifest dynamically
+        const manifestData = {
+            name: "Student Picker",
+            short_name: "Student Picker",
+            description: "Random student selector for class participation",
+            start_url: "/",
+            display: "standalone",
+            background_color: "#f2f2f7",
+            theme_color: "#007AFF",
+            icons: [
+                {
+                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23007AFF'/%3E%3Ctext x='50' y='60' text-anchor='middle' fill='white' font-size='24' font-family='Arial'%3E👨‍🎓%3C/text%3E%3C/svg%3E",
+                    sizes: "192x192",
+                    type: "image/svg+xml"
+                }
+            ]
+        };
+
+        const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        document.getElementById('manifest-placeholder').href = manifestURL;
+    </script>
+</body>
+</html>
