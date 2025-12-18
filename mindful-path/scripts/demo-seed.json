@@ -1,0 +1,20 @@
+{
+  "students": [
+    {
+      "id": "student-1",
+      "email": "student1@example.edu"
+    }
+  ],
+  "instructors": [
+    {
+      "id": "instructor-1",
+      "email": "instructor1@example.edu"
+    }
+  ],
+  "guides": [
+    {
+      "id": "guide-1",
+      "title": "Guide 1"
+    }
+  ]
+}
