@@ -9,5 +9,5 @@
     "resolveJsonModule": true,
     "outDir": "dist"
   },
-  "include": ["api/**/*.ts", "src/**/*.ts", "services/**/*.ts"]
+  "include": ["api/**/*.ts", "middleware/**/*.ts", "src/**/*.ts", "services/**/*.ts"]
 }

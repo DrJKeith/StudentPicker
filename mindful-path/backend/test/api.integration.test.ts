@@ -63,6 +63,31 @@ describe("API integration", () => {
     expect(instructorJournals.body).toEqual([]);
   });
 
+  it("rejects journal submissions missing required fields", async () => {
+    const sessionRes = await request(app)
+      .post("/api/sessions")
+      .set(studentHeaders)
+      .send({ guideId: "guide-1", durationMinutes: 10 })
+      .expect(201);
+
+    await request(app)
+      .post(`/api/sessions/${sessionRes.body.id}/complete`)
+      .set(studentHeaders)
+      .expect(200);
+
+    await request(app)
+      .post("/api/journals")
+      .set(studentHeaders)
+      .send({ content: "Missing sessionId" })
+      .expect(400);
+
+    await request(app)
+      .post("/api/journals")
+      .set(studentHeaders)
+      .send({ sessionId: sessionRes.body.id })
+      .expect(400);
+  });
+
   it("links assessment and journal to the session", async () => {
     const sessionRes = await request(app)
       .post("/api/sessions")
