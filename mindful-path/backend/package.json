@@ -1,0 +1,26 @@
+{
+  "name": "mindful-path-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "ts-node src/server.ts",
+    "test": "NODE_ENV=test node scripts/preflight-test.js && NODE_ENV=test vitest run test/api.integration.test.ts",
+    "test:watch": "NODE_ENV=test vitest watch test/api.integration.test.ts",
+    "test:ci": "NODE_ENV=test node scripts/preflight-test.js && NODE_ENV=test vitest run --reporter=dot test/api.integration.test.ts",
+    "test:db": "node scripts/preflight-test-db.js && vitest run test/db.smoke.test.ts",
+    "test:db:ci": "node scripts/preflight-test-db.js && vitest run --reporter=dot test/db.smoke.test.ts"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.3",
+    "pg": "^8.12.0",
+    "supertest": "^7.1.4",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.4.5",
+    "vitest": "^4.0.16"
+  }
+}

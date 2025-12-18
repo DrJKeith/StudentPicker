@@ -1,0 +1,17 @@
+{
+  "name": "mindful-path",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm:frontend\" \"npm:backend\"",
+    "frontend": "npm --prefix frontend run dev",
+    "backend": "npm --prefix backend run dev",
+    "test": "npm --prefix backend run test",
+    "test:ci": "npm --prefix backend run test:ci",
+    "test:db": "npm --prefix backend run test:db",
+    "test:db:ci": "npm --prefix backend run test:db:ci"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
