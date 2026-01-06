@@ -632,15 +632,12 @@
                     studentArea.innerHTML = '<div class="ready-message">Ready to pick a student!</div>';
                 }
 
-                // Update student count
-                document.getElementById('studentCount').textContent = 
-                    `${this.students.length} students loaded.`;
 
                 // Update not called count
                 const statusInfo = document.getElementById('statusInfo');
                 const notCalledCount = this.students.filter(s => !s.hasBeenCalledOn).length;
                 
-                let statusHTML = `<div class="student-count">${this.students.length} students loaded.</div>`;
+                let statusHTML = `<div class="student-count" id="studentCount">${this.students.length} students loaded.</div>`;
                 
                 if (notCalledCount > 0) {
                     statusHTML += `<div class="not-called-count">${notCalledCount} student(s) not yet called on.</div>`;
